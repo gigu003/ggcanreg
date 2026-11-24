@@ -1,0 +1,373 @@
+---
+output: github_document
+---
+
+
+
+# ggcanreg <img src="man/figures/logo.png" align="right" width="120" alt="ggcanreg logo" />
+
+`ggcanreg` provides standardized `ggplot2`-based visualization tools for population-based cancer registry data. It is designed for routine analysis, quality control, annual reports, research figures, and presentation graphics.
+
+The package focuses on **visualization**. Data cleaning, aggregation, and indicator calculation should be completed before plotting. Every plotting function returns a `ggplot` or `patchwork` object, so users can continue adding `labs()`, `theme()`, scales, or composed panels.
+
+## Installation
+
+```r
+# install.packages("remotes")
+remotes::install_github("gigu003/ggcanreg")
+```
+
+## Quick start
+
+
+``` r
+library(ggcanreg)
+
+cancer_data <- data.frame(
+  cancer = c("肺癌", "乳腺癌", "胃癌", "肝癌", "结直肠癌"),
+  incidence = c(55.2, 42.1, 30.5, 28.7, 26.3),
+  mortality = c(42.4, 8.9, 22.1, 25.4, 14.8)
+)
+
+gg_barchart(
+  cancer_data, cancer, incidence,
+  add_label = TRUE,
+  title = "前 5 位恶性肿瘤发病率",
+  y_lab = "发病率（1/10万）"
+)
+```
+
+## Themes and palettes
+
+Built-in palettes include `"default"`, `"sex"`, `"area"`, `"quality"`, `"map_blue"`, and `"map_red"`.
+
+
+``` r
+canreg_palette("sex")
+canreg_palette("map_blue", n = 7)
+
+ggplot2::ggplot(cancer_data, ggplot2::aes(cancer, incidence, fill = cancer)) +
+  ggplot2::geom_col() +
+  scale_fill_canreg() +
+  theme_canreg()
+```
+
+`theme_canreg()` has three presentation-oriented styles. `"report"` is the
+default for analytic reports, `"publication"` is a compact white-background
+style with axis lines and no background grid, and `"slides"` uses larger type
+and stronger visual hierarchy for projected presentations. The former
+`"default"`, `"block"`, `"grid"`, and `"pie"` styles remain supported.
+
+`gg_linechart()`, `gg_barchart()`, `gg_dual_barchart()`, `gg_comparison()`,
+`gg_dumbbell()`, `gg_heatmap()`, `gg_pie()`, and `gg_pyramid()` use a
+coordinated layout with a 12-point base font, shared title hierarchy, margins,
+clear title and axis spacing, and restrained major grid lines where useful.
+Use `base_size` and `font_family` to match a journal specification or a
+Chinese-capable installed font. Each of these functions also accepts
+`bg_color`, including `"transparent"` for overlays.
+
+
+``` r
+gg_linechart(
+  trend_data,
+  year,
+  incidence,
+  group = sex,
+  base_size = 9,
+  font_family = "Arial"
+)
+```
+
+For slide overlays, set the figure background to transparent. When exporting
+PNG files, also pass `bg = "transparent"` to the graphics device explicitly.
+
+
+``` r
+p <- gg_barchart(
+  cancer_data,
+  cancer,
+  incidence,
+  bg_color = "transparent"
+)
+
+ggplot2::ggsave("cancer-incidence.png", p, bg = "transparent")
+```
+
+
+``` r
+ggplot2::ggplot(cancer_data, ggplot2::aes(cancer, incidence)) +
+  ggplot2::geom_col(fill = "#2171B5") +
+  theme_canreg(style = "report")
+
+ggplot2::ggplot(cancer_data, ggplot2::aes(cancer, incidence)) +
+  ggplot2::geom_col(fill = "#2171B5") +
+  theme_canreg(style = "publication")
+
+ggplot2::ggplot(cancer_data, ggplot2::aes(cancer, incidence)) +
+  ggplot2::geom_col(fill = "#2171B5") +
+  theme_canreg(style = "slides")
+```
+
+Keep `base_family = ""` to use the graphics device default, or pass a Chinese-capable font family available on your system. The package does not hard-code a local font path.
+
+## Trends and composition
+
+
+``` r
+trend_data <- data.frame(
+  year = rep(2020:2022, 2),
+  sex = rep(c("男", "女"), each = 3),
+  incidence = c(45.2, 47.3, 49.1, 38.1, 39.4, 41.2)
+)
+
+gg_linechart(
+  trend_data, year, incidence,
+  group = sex, palette = "sex", add_label = TRUE,
+  title = "发病率年度趋势", x_lab = "年份",
+  y_lab = "发病率（1/10万）", legend_title = "性别"
+)
+```
+
+
+``` r
+composition_data <- data.frame(
+  year = rep(2020:2022, each = 3),
+  cancer = rep(c("肺癌", "胃癌", "肝癌"), 3),
+  cases = c(45, 28, 31, 42, 25, 28, 40, 22, 30)
+)
+
+gg_stack(
+  composition_data, year, cases, fill = cancer,
+  position = "fill", title = "主要癌种构成变化"
+)
+```
+
+## Pie and pyramid charts
+
+
+``` r
+gg_pie(
+  cancer_data, incidence, label = cancer,
+  label_position = "outside", inner_radius = 0.7,
+  center_label = "发病构成"
+)
+
+pyramid_data <- data.frame(
+  agegrp = rep(c("0-4岁", "5-9岁", "10-14岁"), 2),
+  sex = rep(c("男", "女"), each = 3),
+  cases = c(10, 20, 30, 12, 18, 25)
+)
+
+gg_pyramid(
+  pyramid_data, cases, agegrp, sex,
+  legend_labels = c("男性", "女性"), palette = "sex"
+)
+```
+
+## Comparison charts
+
+
+``` r
+sex_data <- data.frame(
+  cancer = rep(c("肺癌", "胃癌", "肝癌"), each = 2),
+  sex = rep(c("男", "女"), 3),
+  rate = c(55, 38, 28, 18, 31, 12)
+)
+
+gg_dumbbell(
+  sex_data, cancer, rate, sex,
+  group_order = c("男", "女"), palette = "sex"
+)
+
+registry_data <- data.frame(
+  registry = c("登记处甲", "登记处乙", "登记处丙", "登记处丁"),
+  incidence = c(42.1, 38.7, 35.2, 40.3)
+)
+
+gg_comparison(
+  registry_data, incidence, registry,
+  highlight = "登记处甲", x_lab = "发病率（1/10万）"
+)
+```
+
+`gg_dual_barchart()` draws two grouped rankings side by side. The earlier misspelled name `gg_dul_barchart()` remains available for compatibility, but new code should use `gg_dual_barchart()`.
+
+## Quality heatmap and indicator cards
+
+
+``` r
+quality_data <- data.frame(
+  registry = rep(c("登记处甲", "登记处乙"), each = 2),
+  indicator = rep(c("MV", "DCO"), 2),
+  value = c(75.2, 2.1, 68.4, 3.5)
+)
+
+gg_heatmap(
+  quality_data, indicator, registry, value,
+  palette = "map_blue", label_format = "percent",
+  title = "登记处质量指标", legend_title = "%"
+)
+
+gg_big_value(45.2, "发病率", value_digits = 1, value_suffix = "/10万")
+```
+
+## Offline maps with bundled or custom sf data
+
+`gg_map()` uses the bundled `china_map` boundaries by default, so national maps
+do not require a network connection. Province boundaries are the default;
+`map_level` can select city or county boundaries. Auxiliary national boundaries
+and the South China Sea islands are omitted from the main panel and shown in a
+framed, enlarged inset close to the lower right of the main map. The islands
+use dark grey and the dashed boundary uses black by default so that small
+features remain visible. Use `island_color` and `auxiliary_color` to customize
+them independently. Use `inset_size` to resize the complete inset relative to
+its default size.
+
+
+``` r
+gg_map()
+gg_map(inset_size = 1.2)
+gg_map(map_level = "city")
+gg_map(areacode = c("410102", "410103"))
+gg_map() + gg_scale_bar() + gg_north_arrow()
+```
+
+When `data = NULL`, `areacode` is matched directly against
+`china_map$area_code`.
+
+Statistical maps divide numeric values into five equal-width intervals by
+default, show the legend, and label missing regions as “No data”. Use `bins` to
+change the number of intervals, `breaks` to provide exact interval boundaries,
+or `discrete = FALSE` for a continuous color scale.
+Use `legend_ncol` or `legend_nrow` to control the number of legend columns or
+rows.
+
+
+``` r
+cr <- data.frame(
+  areacode = c("410102", "410103", "410104"),
+  cr = c(42.1, 38.7, NA)
+)
+gg_map(cr, areacode = "areacode", value = "cr", bins = 5)
+
+# Change the default missing-data label when a Chinese report label is needed.
+gg_map(cr, areacode = "areacode", value = "cr", na_label = "无数据")
+
+# Use a transparent plot and panel background when exporting a PNG overlay.
+gg_map(
+  cr,
+  areacode = "areacode",
+  value = "cr",
+  bg_color = "transparent"
+)
+
+`value` accepts any numeric column name, including age-standardized rates such
+as `asr_cn2000`. Non-finite values (`Inf`, `-Inf`, or `NaN`) are shown as
+missing data. Superseded county codes are matched to their current bundled
+boundary when a successor is known.
+
+# Custom interval labels
+gg_map(
+  cr, areacode = "areacode", value = "cr",
+  breaks = c(0, 10, 20, 50),
+  break_labels = c("低", "中", "高")
+)
+
+# For a column-based legend, larger intervals are shown above smaller ones.
+gg_map(
+  cr, areacode = "areacode", value = "cr",
+  breaks = c(0, 10, 20, 50), legend_ncol = 2
+)
+
+# Facet a multi-region dataset by province or city; each panel is independently scaled
+# and the default layout is a compact landscape grid (18 panels use 6 columns).
+# `facet = "city"` uses city-level background boundaries by default.
+gg_map(cr, areacode = "areacode", value = "cr", facet = "province")
+gg_map(cr, areacode = "areacode", value = "cr", facet = "city")
+# Facet by a column in the input data to compare complete maps by sex.
+sex_cr <- rbind(
+  transform(cr, sex = "Male"),
+  transform(cr, sex = "Female")
+)
+gg_map(
+  sex_cr,
+  areacode = "areacode",
+  value = "cr",
+  facet = "sex",
+  bg_level = "province"
+)
+# Use `facet_ncol` or `facet_nrow` to set the panel layout explicitly.
+```
+
+Titles, centered facet labels, the blue map palette, white internal borders,
+and a bottom horizontal legend use a report-ready map style by default. A
+Henan city comparison in the same 6-by-3 format can be created as follows:
+
+
+``` r
+henan_areas <- subset(
+  china_map,
+  province_code == "410000" &
+    (area_level == "county" | area_code == "419001")
+)
+henan_cr <- data.frame(
+  areacode = henan_areas$area_code,
+  cr = seq(116.03, 593.92, length.out = nrow(henan_areas))
+)
+
+gg_map(
+  henan_cr,
+  areacode = "areacode",
+  value = "cr",
+  facet = "city",
+  title = "河南省癌症总体发病率",
+  subtitle = "18个地市的分布比较（单位：1/10万）",
+  legend_title = "发病率\n(1/10万)",
+  footnote = "数据来源：河南省肿瘤登记年报",
+  legend_nrow = 1
+) +
+  gg_scale_bar() +
+  gg_north_arrow()
+```
+
+Faceted maps remain regular `ggplot` objects, so standard ggplot2 themes and
+labels can be added directly.
+
+Custom administrative boundaries can still be supplied as a local `sf` object.
+
+
+``` r
+geometry <- sf::st_sfc(
+  sf::st_polygon(list(rbind(c(0, 0), c(1, 0), c(1, 1), c(0, 1), c(0, 0)))),
+  sf::st_polygon(list(rbind(c(1, 0), c(2, 0), c(2, 1), c(1, 1), c(1, 0))))
+)
+map_data <- sf::st_sf(
+  registry = c("登记处甲", "登记处乙"),
+  incidence = c(42.1, 38.7),
+  geometry = geometry
+)
+
+gg_map(
+  map_data, fill = incidence, palette = "map_blue",
+  legend = TRUE, label = registry, na_value = "grey90"
+)
+```
+
+The older `data + areacode` workflow remains available for compatibility and
+now resolves boundaries from `china_map` without network access. `read_map()`
+remains available only as an explicit online helper.
+
+## Formatting helpers
+
+
+``` r
+format_rate(c(12.345, 67.891), digits = 1)
+format_percent(c(23.45, 67.89), digits = 1)
+format_count(c(1234, 567890))
+```
+
+`format_percent()` assumes that a value such as `23.5` already means `23.5%` when `scale = 1`; do not multiply such values by 100 again. For proportions stored from 0 to 1, use `scale = 100`.
+
+## Relationship with canregtools
+
+`ggcanreg` focuses on visualization and accepts analysis-ready data frames or `sf` objects. Data cleaning, aggregation, quality-control calculations, and standardized-rate calculations should preferably be completed beforehand, for example with `canregtools` or another transparent registry-analysis workflow.
