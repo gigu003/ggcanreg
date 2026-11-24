@@ -1,0 +1,42 @@
+Package: ggcanreg
+Title: Visualization Tools for Cancer Registry Data
+Version: 0.0.0.9000
+Authors@R: 
+    person("Qiong", "Chen", , "chenq08@126.com", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0003-2401-0046",
+           affiliation = "Department of Cancer Epidemiology, The Affiliated
+           Cancer Hospital of Zhengzhou University & Henan Cancer Hospital,
+           Henan Cancer Registry in China"))
+Description: Provides visualization tools for population-based cancer registry
+    data. The package implements standardized and customizable graphical methods
+    for exploring cancer incidence, mortality, and related indicators,
+    supporting routine analysis and reporting in cancer registration.
+License: GPL (>= 3)
+URL: https://github.com/gigu003/ggcanreg
+BugReports: https://github.com/gigu003/ggcanreg/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports: 
+    cachem,
+    colorspace,
+    dplyr,
+    ggplot2,
+    grDevices,
+    grid,
+    memoise,
+    patchwork,
+    progress,
+    rlang,
+    scales,
+    sf,
+    stats,
+    stringr,
+    tidyr
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Depends: 
+    R (>= 4.1.0)
+Config/roxygen2/version: 8.0.0
+LazyData: true
+LazyDataCompression: xz
